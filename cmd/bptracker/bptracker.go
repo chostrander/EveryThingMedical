@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	viper "github.com/spf13/viper"
 	"gopkg.in/mgo.v2"
 )
 
@@ -21,11 +22,20 @@ func main() {
 
 	tlsConfig := &tls.Config{}
 
+	viper.SetConfigName("config")   // name of config file (without extension)
+	viper.AddConfigPath("$HOME/go") // path to look for the config file in
+	err := viper.ReadInConfig()     // Find and read the config file
+	if err != nil {                 // Handle errors reading the config file
+		panic(fmt.Errorf("Fatal error config file: %s \n", err))
+	}
+
+	fmt.Println("read in viper")
+	fmt.Printf("--> %s \n", viper.GetString("mongo.username"))
 	dialInfo := &mgo.DialInfo{
 		Addrs:    []string{"hoss00-shard-00-00-qyw8j.mongodb.net:27017"},
 		Database: "admin", // this is really the authentication DB
-		Username: "hossville",
-		Password: "USMC##mongo18",
+		Username: viper.GetString("mongo.username"),
+		Password: viper.GetString("mongo.password"),
 	}
 	dialInfo.DialServer = func(addr *mgo.ServerAddr) (net.Conn, error) {
 		conn, err := tls.Dial("tcp", addr.String(), tlsConfig)
